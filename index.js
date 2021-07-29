@@ -32,7 +32,9 @@ function createQueries(targetFile, options){
 
 			let fieldsDecl = fields.map(field => ' '.repeat(8) + field.name).join(',\n');
 
-			let query = `${' '.repeat(3)} query ${type.name} {\n${fieldsDecl}\n ${' '.repeat(3)}}`;
+			// let query = `${' '.repeat(3)} query ${type.name} {\n${fieldsDecl}\n ${' '.repeat(3)}}`;
+			let ccName = type.name.slice(0, 1).toLowerCase() + type.name.slice(1);
+			let query = `${' '.repeat(3)} fragment ${ccName} on ${type.name} {\n${fieldsDecl}\n ${' '.repeat(3)}}`;
 
 			return {name: type.name.slice(0, 1).toLowerCase() + type.name.slice(1), query};
 		})
@@ -43,7 +45,7 @@ function createQueries(targetFile, options){
 
 		declTypes.filter(type => type.query).forEach(declType => {
 			
-			jsDeclarations += `export const ${declType.name} = gql\`\n${declType.query}\n\`;\n\n`
+			jsDeclarations += `export const ${declType.name}Fragment = gql\`\n${declType.query}\n\`;\n\n`
 		});
 
 		targetFile = targetFile || process.argv[2];

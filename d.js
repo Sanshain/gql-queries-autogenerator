@@ -1,7 +1,7 @@
 import gql from "./graphql-tag";
 
-export const userNode = gql`
-    query UserNode {
+export const userNodeFragment = gql`
+    fragment userNode on UserNode {
         id,
         lastLogin,
         username,
@@ -19,14 +19,14 @@ export const userNode = gql`
     }
 `;
 
-export const node = gql`
-    query Node {
+export const nodeFragment = gql`
+    fragment node on Node {
         id
     }
 `;
 
-export const dialogType = gql`
-    query DialogType {
+export const dialogTypeFragment = gql`
+    fragment dialogType on DialogType {
         id,
         avatar,
         title,
@@ -34,8 +34,8 @@ export const dialogType = gql`
     }
 `;
 
-export const userType = gql`
-    query UserType {
+export const userTypeFragment = gql`
+    fragment userType on UserType {
         id,
         lastLogin,
         username,
@@ -52,8 +52,8 @@ export const userType = gql`
     }
 `;
 
-export const messageType = gql`
-    query MessageType {
+export const messageTypeFragment = gql`
+    fragment messageType on MessageType {
         id,
         time,
         value,
@@ -61,49 +61,49 @@ export const messageType = gql`
     }
 `;
 
-export const messageSubType = gql`
-    query MessageSubType {
+export const messageSubTypeFragment = gql`
+    fragment messageSubType on MessageSubType {
         author,
         value
     }
 `;
 
-export const register = gql`
-    query Register {
+export const registerFragment = gql`
+    fragment register on Register {
         success,
         token
     }
 `;
 
-export const verifyAccount = gql`
-    query VerifyAccount {
+export const verifyAccountFragment = gql`
+    fragment verifyAccount on VerifyAccount {
         success
     }
 `;
 
-export const obtainJSONWebToken = gql`
-    query ObtainJSONWebToken {
+export const obtainJSONWebTokenFragment = gql`
+    fragment obtainJSONWebToken on ObtainJSONWebToken {
         token,
         success,
         unarchiving
     }
 `;
 
-export const updateAccount = gql`
-    query UpdateAccount {
+export const updateAccountFragment = gql`
+    fragment updateAccount on UpdateAccount {
         success
     }
 `;
 
-export const __Type = gql`
-    query __Type {
+export const __TypeFragment = gql`
+    fragment __Type on __Type {
         name,
         description
     }
 `;
 
-export const __Field = gql`
-    query __Field {
+export const __FieldFragment = gql`
+    fragment __Field on __Field {
         name,
         description,
         isDeprecated,
@@ -111,16 +111,16 @@ export const __Field = gql`
     }
 `;
 
-export const __InputValue = gql`
-    query __InputValue {
+export const __InputValueFragment = gql`
+    fragment __InputValue on __InputValue {
         name,
         description,
         defaultValue
     }
 `;
 
-export const __EnumValue = gql`
-    query __EnumValue {
+export const __EnumValueFragment = gql`
+    fragment __EnumValue on __EnumValue {
         name,
         description,
         isDeprecated,
@@ -128,8 +128,8 @@ export const __EnumValue = gql`
     }
 `;
 
-export const __Directive = gql`
-    query __Directive {
+export const __DirectiveFragment = gql`
+    fragment __Directive on __Directive {
         name,
         description
     }
