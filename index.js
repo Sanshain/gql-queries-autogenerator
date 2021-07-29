@@ -63,4 +63,4 @@ function createQueries(targetFile, options){
 
 module.exports = {createQueries};
 
-createQueries('d.js', {template: './template.js'})
+// createQueries('d.js', {template: './template.js'})
