@@ -12,7 +12,7 @@ type MessageSubType{
 
 converts to 
 
-```
+```js
 export const messageSubType = gql`
     query MessageSubType {
         author,
@@ -33,8 +33,9 @@ node index.js targetFile.js
 
 ### programming:
 
-```
-import {createQueries} from 'gql-queries-generator';
+```js
+const createQueries = require('gql-queries-generator').createQueries;
+// or `import {createQueries} from 'gql-queries-generator';`
 createQueries('d.js', {template: './template.js'})
 ```
 
