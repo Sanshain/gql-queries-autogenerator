@@ -1,3 +1,4 @@
+import gql from "./graphql-tag";
 
 export const userNode = gql`
     query UserNode {

@@ -5,7 +5,7 @@ const fs = require('fs');
 const getTypes = require("./utils").getTypes;
 
 /** */
-function createQueries(targetFile){
+function createQueries(targetFile, options){
 
 	// getTypes((/** @type {any} */ data) => console.log(data))
 	getTypes((/** @type {any} */ response) => {
@@ -48,6 +48,11 @@ function createQueries(targetFile){
 
 		targetFile = targetFile || process.argv[2];
 
+		if (options.template){
+			let imports = fs.readFileSync(options.template).toString()
+			jsDeclarations = imports + jsDeclarations;
+		}
+
 		fs.writeFileSync(targetFile, jsDeclarations);
 
 		console.log(`queries generated to "${targetFile}"`)
@@ -58,4 +63,4 @@ function createQueries(targetFile){
 
 module.exports = {createQueries};
 
-// createQueries('d.js')
+createQueries('d.js', {template: './template.js'})
