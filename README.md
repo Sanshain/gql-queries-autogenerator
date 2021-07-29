@@ -34,7 +34,8 @@ node index.js targetFile.js
 ### programming:
 
 ```js
-import {createQueries} from 'gql-queries-generator';
+const createQueries = require('gql-queries-generator').createQueries;
+// or `import {createQueries} from 'gql-queries-generator';`
 createQueries('d.js', {template: './template.js'})
 ```
 
