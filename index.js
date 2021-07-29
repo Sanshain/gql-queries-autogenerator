@@ -16,35 +16,37 @@ function createQueries(targetFile, options){
 
 		let acceptedTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime'];
 
-		let declTypes =  types.map(type => {
-
-			let fields = type?.fields?.filter(field => {
-				// if (field.type.ofType !== null){
-				// 	console.log('id');
-				// }
-				if (~acceptedTypes.indexOf(field.type.name) || ~acceptedTypes.indexOf(field.type.ofType?.name ?? (null + ''))){
-					return true;
-				}
-				else return false;
-			}) || [];
-
-			if (!fields.length) return '';
-
-			let fieldsDecl = fields.map(field => ' '.repeat(8) + field.name).join(',\n');
-
-			let query = `${' '.repeat(3)} query ${type.name} {\n${fieldsDecl}\n ${' '.repeat(3)}}`;
-
-			return {name: type.name.slice(0, 1).toLowerCase() + type.name.slice(1), query};
-		})
-
-		// console.log(declTypes.filter(type => type));
+		const queries = types.shift().fields;
 
 		let jsDeclarations = '\n';
 
-		declTypes.filter(type => type.query).forEach(declType => {
+		for (const query of queries) {
 			
-			jsDeclarations += `export const ${declType.name} = gql\`\n${declType.query}\n\`;\n\n`
-		});
+			let queryName = query.name;
+			let typeName = query.type.name; // ?? queries.fields[0].type.ofType.name;
+			if (typeName && !(options?.exclude || []).includes(queryName)){
+
+				let declType = {name: typeName.slice(0, 1).toLowerCase() + typeName.slice(1)};
+				
+				let type = types.find(type => type.name == typeName);
+				let fields = type?.fields?.filter(field => {					
+					if (~acceptedTypes.indexOf(field.type.name) || ~acceptedTypes.indexOf(field.type.ofType?.name ?? (null + ''))){
+						return true;
+					}
+					else return false;
+				}) || [];
+	
+				if (!fields.length) declType.query = '';
+				else{
+
+					let fieldsDecl = fields.map(field => ' '.repeat(12) + field.name).join(',\n');
+					let rootFieldDecl = ' '	.repeat(8) + `${queryName} (id: $id) {\n${fieldsDecl}\n${' '.repeat(8)}}`
+					declType.query = `${' '.repeat(3)} query ${type.name} {\n${rootFieldDecl}\n ${' '.repeat(3)}}`;					
+				}
+
+				jsDeclarations += `export const ${declType.name} = gql\`\n${declType.query}\n\`;\n\n`
+			}
+		}
 
 		targetFile = targetFile || process.argv[2];
 
@@ -63,4 +65,12 @@ function createQueries(targetFile, options){
 
 module.exports = {createQueries};
 
-// createQueries('d.js', {template: './template.js'})
+
+
+if (process.argv.slice(1).shift() === __filename)
+{
+	createQueries('d.js', {
+		template: './template.js',
+		exclude: ['me']
+	});
+} 
