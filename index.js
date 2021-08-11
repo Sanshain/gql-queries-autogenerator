@@ -11,14 +11,44 @@ function createQueries(targetFile, options){
 	getTypes((/** @type {any} */ response) => {
 		console.log(response)
 
-		let types = response.data['__schema'].types;
+		// let types = response.data['__schema'].types;		
+		let {types, mutationType: mutationTypes} = response.data['__schema'];
 		// console.log(types);
+
 
 		let acceptedTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime'];
 
-		const queries = types.shift().fields;
+		const queries = types.shift().fields;  
+		const mutations = mutationTypes.fields.filter(m => m.description.startsWith(':::'));
 
 		let jsDeclarations = '\n';
+
+		for (const mutation of mutations){
+
+			let inputFields = mutation.description.substring(3).split('\n')
+				.filter(item => item.trim())
+				.map(item => item.trim().split(':'));
+
+			const fieldTypes = mutation.type.fields;
+			let declTypes = []
+
+			for (let fieldType of fieldTypes){
+				
+				let subFields = ' '.repeat(12) + fieldType.type.fields.map(f => f.name).join(',\n' + ' '.repeat(12));
+				let typeDecl = ' '.repeat(8) + fieldType.name + `{\n${subFields + '\n' + ' '.repeat(8)}}`
+
+				declTypes.push(typeDecl);
+			}			
+
+			let argsWrapper = `(${inputFields
+				.map(([field, type]) => field + ': $' + field)
+				.join(', ')})` + `{\n${declTypes.join(',') + '\n' + ' '.repeat(4)}}`			
+
+			let mutationDecl = `mutation ${mutation.name} ${argsWrapper + ' '.repeat(4)}`;
+						
+			jsDeclarations += `export const ${mutation.name} = gql\`\n${' '.repeat(4) + mutationDecl}\n\`;\n\n`
+		}
+
 
 		for (const query of queries) {
 			

@@ -1,5 +1,18 @@
 import gql from "./graphql-tag";
 
+export const postCreate = gql`
+    mutation postCreate (files: $files, value: $value){
+        post{
+            id,
+            by,
+            time,
+            value,
+            files,
+            message
+        }
+    }    
+`;
+
 export const messageType = gql`
     query MessageType {
         messages (id: $id) {
@@ -21,10 +34,8 @@ export const userType = gql`
             lastName,
             email,
             isStaff,
-            isActive,
             dateJoined,
             avatar,
-            isSuperuser,
             name,
             image
         }

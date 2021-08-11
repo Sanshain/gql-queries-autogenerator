@@ -4,7 +4,7 @@ const http = require('http');
 
 
 
-const data = { 
+const queriesInfoQuery = { 
 // 	query : `{
 // 		  __schema {
 // 		  types {
@@ -16,24 +16,74 @@ const data = {
 // 		  }
 // 	  }
 //   `,
+
   query: `
 	{
 		__schema {
-		types {
-			name,
-			fields {
+			types {
 				name,
-				type {
-				name,
+				fields {
+					name,
+					type {
+						name,
 						ofType {
 							name					  
 						}
+					}
 				}
-			}
-		}
-		}
-	}  
+			},
+			mutationType{
+				name,
+				fields{
+				  name,
+				  description,
+				  type{
+					 name,
+					 fields{
+						name,
+						type{
+							fields{
+							  name
+							}
+						 }						         
+					 }
+				  }
+				}
+			 }			
+		}		
+	}
   `,
+
+//   query: `
+//   {
+// 		__schema {
+// 			types {
+// 				name,
+// 				fields {
+// 					name,
+// 					type {
+// 						name,
+// 						ofType {
+// 							name					  
+// 						},
+// 						fields{
+// 							name,
+// 							type{
+// 								name,
+// 								fields{
+// 									name,
+// 									type{
+// 										name
+// 									}
+// 								}
+// 							}
+// 						}          
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}  
+//   `,
   variables: null
 }
 
@@ -55,7 +105,7 @@ function getTypes(typesHandler) {
 	 })
 	
 	 request.on('error', e => console.log(e));	 
-	 request.write(JSON.stringify(data))
+	 request.write(JSON.stringify(queriesInfoQuery))
 	 request.end()	
 }
 
