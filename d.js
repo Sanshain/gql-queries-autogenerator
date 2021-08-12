@@ -48,7 +48,11 @@ export const dialogType = gql`
             id,
             avatar,
             title,
-            talkersAmount
+            talkersAmount,
+            lastMessage {
+                author,
+                value,
+            }
         }
     }
 `;

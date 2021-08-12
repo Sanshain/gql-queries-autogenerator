@@ -63,8 +63,22 @@ function createQueries(targetFile, options){
 					if (~acceptedTypes.indexOf(field.type.name) || ~acceptedTypes.indexOf(field.type.ofType?.name ?? (null + ''))){
 						return true;
 					}
+					else if(field.description?.toLowerCase().startsWith('nested')) return true;
 					else return false;
 				}) || [];
+
+				fields = fields.map(field => {
+					if (field.description?.toLowerCase().startsWith('nested')){
+
+						let subType = types.find(type => field.type.name == type.name);
+						let subFields = subType.fields
+							.map(f => f.name)
+							.reduce((acc, f) => acc + ' '.repeat(16) + f + ',\n', '')
+						field.name = `${field.name} {\n${subFields}${' '.repeat(12)}}`
+						return field;
+					}
+					else return field;
+				})
 	
 				if (!fields.length) declType.query = '';
 				else{

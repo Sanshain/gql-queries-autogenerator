@@ -23,9 +23,10 @@ const queriesInfoQuery = {
 			types {
 				name,
 				fields {
-					name,
+					name,		
+					description,			
 					type {
-						name,
+						name,						
 						ofType {
 							name					  
 						}
@@ -90,18 +91,29 @@ const queriesInfoQuery = {
 
 
 function getTypes(typesHandler) {
-	const options = {
+	const options = {		
 		hostname: '127.0.0.1',
 		port: 8000,
 		path: '/graphql',
 		method: 'POST',
+		// maxHeaderSize: 65536,
 		headers: {'Content-Type': 'application/json'}
 	 }
 	
 	const request = http.request(options, (response) => {
 		
+		let data = ''
+
 		console.log(`statusCode: ${response.statusCode}`)
-		response.on('data', (d) => typesHandler(JSON.parse(d.toString())));		//   process.stdout.write(d)			
+		response.on('data', (d) => {
+			// при больщом объеме json выдает не весь ответ
+			// return typesHandler(JSON.parse(d.toString()));
+			data += d.toString();			
+		});		//   process.stdout.write(d)		
+		
+		response.on('end', () => {			
+			return typesHandler(JSON.parse(data));
+		});	
 	 })
 	
 	 request.on('error', e => console.log(e));	 
