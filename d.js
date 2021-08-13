@@ -2,13 +2,24 @@ import gql from "./graphql-tag";
 
 export const postCreate = gql`
     mutation postCreate {
-        postCreate(value: $value, files: $files){
+        postCreate(files: $files, value: $value){
             post{
                 id,
                 time,
                 value,
                 files
             }
+        }
+    }
+`;
+
+export const postType = gql`
+    query PostType {
+        posts (user: $user) {
+            id,
+            time,
+            value,
+            files
         }
     }
 `;
