@@ -44,7 +44,13 @@ const queriesInfoQuery = {
 						name,
 						type{
 							fields{
-							  name
+							  name,
+							  type{
+								  name,
+								  ofType{
+									  name
+								  }
+							  }
 							}
 						 }						         
 					 }

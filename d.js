@@ -5,11 +5,9 @@ export const postCreate = gql`
         postCreate(value: $value, files: $files){
             post{
                 id,
-                by,
                 time,
                 value,
-                files,
-                message
+                files
             }
         }
     }
@@ -21,6 +19,7 @@ export const messageType = gql`
             id,
             time,
             value,
+            files,
             author
         }
     }

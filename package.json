@@ -1,6 +1,6 @@
 {
   "name": "gql-queries-generator",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "",
   "homepage": "https://github.com/Sanshain/gql-queries-autogenerator",
   "main": "index.js",

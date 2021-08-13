@@ -16,7 +16,7 @@ function createQueries(targetFile, options){
 		// console.log(types);
 
 
-		let acceptedTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime'];
+		let acceptedTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime', 'JSONString'];
 
 		const queries = types.shift().fields;  
 		const mutations = mutationTypes.fields.filter(m => m.description.startsWith(':::'));
@@ -34,7 +34,8 @@ function createQueries(targetFile, options){
 
 			for (let fieldType of fieldTypes){
 				
-				let subFields = ' '.repeat(16) + fieldType.type.fields.map(f => f.name).join(',\n' + ' '.repeat(16));
+				let subFieldsList = fieldType.type.fields.filter(f => ~acceptedTypes.indexOf(f.type.ofType?.name))
+				let subFields = ' '.repeat(16) + subFieldsList.map(f => f.name).join(',\n' + ' '.repeat(16));
 				let typeDecl = ' '.repeat(12) + fieldType.name + `{\n${subFields + '\n' + ' '.repeat(12)}}`
 
 				declTypes.push(typeDecl);
