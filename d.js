@@ -1,16 +1,18 @@
 import gql from "./graphql-tag";
 
 export const postCreate = gql`
-    mutation postCreate (files: $files, value: $value){
-        post{
-            id,
-            by,
-            time,
-            value,
-            files,
-            message
+    mutation postCreate {
+        postCreate(value: $value, files: $files){
+            post{
+                id,
+                by,
+                time,
+                value,
+                files,
+                message
+            }
         }
-    }    
+    }
 `;
 
 export const messageType = gql`

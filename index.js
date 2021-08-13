@@ -34,17 +34,17 @@ function createQueries(targetFile, options){
 
 			for (let fieldType of fieldTypes){
 				
-				let subFields = ' '.repeat(12) + fieldType.type.fields.map(f => f.name).join(',\n' + ' '.repeat(12));
-				let typeDecl = ' '.repeat(8) + fieldType.name + `{\n${subFields + '\n' + ' '.repeat(8)}}`
+				let subFields = ' '.repeat(16) + fieldType.type.fields.map(f => f.name).join(',\n' + ' '.repeat(16));
+				let typeDecl = ' '.repeat(12) + fieldType.name + `{\n${subFields + '\n' + ' '.repeat(12)}}`
 
 				declTypes.push(typeDecl);
 			}			
 
 			let argsWrapper = `(${inputFields
 				.map(([field, type]) => field + ': $' + field)
-				.join(', ')})` + `{\n${declTypes.join(',') + '\n' + ' '.repeat(4)}}`			
+				.join(', ')})` + `{\n${declTypes.join(',') + '\n' + ' '.repeat(8)}}`			
 
-			let mutationDecl = `mutation ${mutation.name} ${argsWrapper + ' '.repeat(4)}`;
+			let mutationDecl = `mutation ${mutation.name} {\n${' '.repeat(8)}${mutation.name}${argsWrapper}\n${' '.repeat(4)}}`;
 						
 			jsDeclarations += `export const ${mutation.name} = gql\`\n${' '.repeat(4) + mutationDecl}\n\`;\n\n`
 		}
