@@ -56,10 +56,15 @@ function createQueries(targetFile, options) {
 
 
 		for (const query of queries) {
-			
+
 			let queryName = query.name;
 			let typeName = query.type.name; // ?? queries.fields[0].type.ofType.name;
 			let inInclude = includeTypes ? ~includeTypes.indexOf(queryName) : false
+			
+			let complexFields = []
+			if (inInclude){
+				complexFields = Object.keys(options?.include?.complex?.[queryName]?.fields)
+			}			
 
 			if ((typeName && !(options?.exclude || []).includes(queryName)) || inInclude) {
 
@@ -72,30 +77,56 @@ function createQueries(targetFile, options) {
 					if (~acceptedTypes.indexOf(field.type.name) || ~acceptedTypes.indexOf(field.type.ofType?.name ?? (null + ''))) {
 						return true;
 					}
-					else if (field.description?.toLowerCase().startsWith('nested')) return true;
+					else if (field.description?.toLowerCase().startsWith('nested') || ~complexFields.indexOf(field.name)) {
+						return true;
+					}
 					else return false;
 				}) || [];
 
 				fields = fields.map(field => {
-					if (field.description?.toLowerCase().startsWith('nested')) {
+					if (field.description?.toLowerCase().startsWith('nested') || ~complexFields.indexOf(field.name)) {
 
-						let subType = types.find(type => field.type.name == type.name);
+						let _typeName = field.type.name;
+						let _subTypeFields = []
+						if (!_typeName){
+							_typeName = field.type.ofType.name;
+							_subTypeFields = options?.include?.complex?.[queryName]?.fields[field.name]
+							if (!_subTypeFields.length){
+								console.log(`Attention: fields for "${field.name}" field is not specified in "${queryName}" query`);
+							}
+						}						
+
+						let subType = types.find(type => _typeName == type.name);
+
 						let subFields = subType.fields
 							.map(f => f.name)
+						if (_subTypeFields?.length) subFields = subFields
+							.filter(f => ~_subTypeFields.indexOf(f))
+						subFields = subFields
 							.reduce((acc, f) => acc + ' '.repeat(16) + f + ',\n', '')
+
 						field.name = `${field.name} {\n${subFields}${' '.repeat(12)}}`
 						return field;
+						
 					}
 					else return field;
 				})
 
 				if (!fields.length) declType.query = '';
-				else {
+				else 
+				{
 
 					let args = `(id: $id)`
-					if (inInclude && options?.include?.complex){
-						let inputFields = options?.include?.complex[queryName];
-						args = `(${inputFields.map(i => `${i}: $${i}`).join(', ')})`
+					if (inInclude && options?.include?.complex) 
+					{						
+						let inputFields = options?.include?.complex?.[queryName]?.args;
+
+						if (inputFields.length){
+
+							args = `(${inputFields.map(i => `${i}: $${i}`).join(', ')})`
+						}
+
+						// if (inputFields.fields?.length){}						
 					}
 
 					let fieldsDecl = fields.map(field => ' '.repeat(12) + field.name).join(',\n');
@@ -133,7 +164,12 @@ if (process.argv.slice(1).shift() === __filename) {
 		include: {
 			base: [],
 			complex: {
-				posts: ['user']
+				posts: {
+					args: ['user'],
+					fields: {
+						by: ['id']
+					}
+				}
 			}
 		}
 	});

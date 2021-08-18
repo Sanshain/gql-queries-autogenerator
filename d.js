@@ -17,6 +17,9 @@ export const postType = gql`
     query PostType {
         posts (user: $user) {
             id,
+            by {
+                id,
+            },
             time,
             value,
             files
