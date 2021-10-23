@@ -17,5 +17,5 @@ type Options = {
 
 declare function createQueries(targetFile: string, options? : Options)
 
-export = typesGenerate;
+export = createQueries;
 

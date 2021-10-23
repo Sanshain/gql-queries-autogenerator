@@ -38,11 +38,17 @@ function createQueries(targetFile, options) {
 
 			for (let fieldType of fieldTypes) {
 
-				let subFieldsList = fieldType.type.fields.filter(f => ~acceptedTypes.indexOf(f.type.ofType?.name))
-				let subFields = ' '.repeat(16) + subFieldsList.map(f => f.name).join(',\n' + ' '.repeat(16));
-				let typeDecl = ' '.repeat(12) + fieldType.name + `{\n${subFields + '\n' + ' '.repeat(12)}}`
+				try{					
+					let subFieldsList = fieldType.type.fields?.filter(f => ~acceptedTypes.indexOf(f.type.ofType?.name))
+					let subFields = ' '.repeat(16) + subFieldsList?.map(f => f.name).join(',\n' + ' '.repeat(16));
+					let typeDecl = ' '.repeat(12) + fieldType.name + (subFieldsList ? `{\n${subFields + '\n' + ' '.repeat(12)}}` : '');
 
-				declTypes.push(typeDecl);
+					declTypes.push(typeDecl);
+				}
+				catch{
+					console.log(`error on ${fieldType.type}`);
+				}
+				
 			}
 
 			let argsWrapper = `(${inputFields
@@ -63,7 +69,7 @@ function createQueries(targetFile, options) {
 			
 			let complexFields = []
 			if (inInclude){
-				complexFields = Object.keys(options?.include?.complex?.[queryName]?.fields)
+				complexFields = Object.keys(options?.include?.complex?.[queryName]?.fields ?? [])
 			}			
 
 			if ((typeName && !(options?.exclude || []).includes(queryName)) || inInclude) {
