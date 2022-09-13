@@ -1,6 +1,9 @@
 //@ts-check
 
 const http = require('http');
+const fs = require('fs')
+const path = require('path')
+const { exec, execSync } = require('child_process')
 
 
 
@@ -118,7 +121,20 @@ function getTypes(typesHandler) {
 		});		//   process.stdout.write(d)		
 		
 		response.on('end', () => {			
-			return typesHandler(JSON.parse(data));
+			if (response.statusCode == 200) return typesHandler(JSON.parse(data));
+			else{				
+				fs.existsSync('.errors') || fs.mkdirSync('.errors')
+				// let errorFileName = path.dirname(__dirname) +'\\.errors\\error.html';				
+				fs.writeFileSync('.errors' + path.sep + 'error.html', data, {
+					flag: 'w'
+				})
+				try{
+					execSync('start .errors\\error.html')
+				}
+				finally{
+					throw new Error('data');				
+				}
+			}
 		});	
 	 })
 	

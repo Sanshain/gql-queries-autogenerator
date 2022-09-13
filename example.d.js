@@ -1,7 +1,7 @@
 import gql from "./graphql-tag";
 
 export const postCreate = gql`
-    mutation undefined {
+    mutation PostMutation {
         postCreate(value: $value, files: $files){
             post{
                 id,
@@ -14,7 +14,7 @@ export const postCreate = gql`
 `;
 
 export const likeApply = gql`
-    mutation undefined {
+    mutation LikeMutation {
         likeApply(postId: $postId){
             increased
         }
@@ -22,7 +22,7 @@ export const likeApply = gql`
 `;
 
 export const friendshipApply = gql`
-    mutation undefined {
+    mutation FriendshipMutation {
         friendshipApply(userId: $userId){
             added
         }

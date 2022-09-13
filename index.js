@@ -55,7 +55,9 @@ function createQueries(targetFile, options) {
 				.map(([field, type]) => field + ': $' + field)
 				.join(', ')})` + `{\n${declTypes.join(',') + '\n' + ' '.repeat(8)}}`
 
-			let mutationDecl = `mutation ${mutation.name} {\n${' '.repeat(8)}${mutation.name}${argsWrapper}\n${' '.repeat(4)}}`;
+			console.log(mutation);
+
+			let mutationDecl = `mutation ${mutation.type.name} {\n${' '.repeat(8)}${mutation.name}${argsWrapper}\n${' '.repeat(4)}}`;
 
 			jsDeclarations += `export const ${mutation.name} = gql\`\n${' '.repeat(4) + mutationDecl}\n\`;\n\n`
 		}
@@ -164,7 +166,7 @@ module.exports = { createQueries };
 
 
 if (process.argv.slice(1).shift() === __filename) {
-	createQueries('d.js', {
+	createQueries('example.d.js', {
 		template: './template.js',
 		exclude: ['me'],
 		include: {
