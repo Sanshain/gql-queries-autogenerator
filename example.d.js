@@ -2,7 +2,7 @@ import gql from "./graphql-tag";
 
 export const postCreate = gql`
     mutation PostMutation {
-        postCreate(value: $value, files: $files){
+        postCreate(files: $files, value: $value){
             post{
                 id,
                 time,
@@ -25,6 +25,27 @@ export const friendshipApply = gql`
     mutation FriendshipMutation {
         friendshipApply(userId: $userId){
             added
+        }
+    }
+`;
+
+export const userSettingsMutation = gql`
+    mutation SettingsMutationPayload {
+        userSettingsMutation(birthday: $birthday, sex: $sex, placeId: $placeId, placeTypeId: $placeTypeId){
+            profile{
+                id,
+                username,
+                firstName,
+                lastName,
+                isStaff,
+                dateJoined,
+                placeId
+            },
+            errors,
+            settings{
+                firstName
+            },
+            clientMutationId
         }
     }
 `;
@@ -60,7 +81,7 @@ export const userType = gql`
             placeId,
             name,
             image,
-            isFriend
+            friendshipState
         }
     }
 `;

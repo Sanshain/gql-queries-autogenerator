@@ -131,6 +131,12 @@ function getTypes(typesHandler) {
 				try{
 					execSync('start .errors\\error.html')
 				}
+				catch{
+					try{
+						execSync('start ' + 'http://' + options.hostname + ':' + options.port + options.path)
+					}
+					catch{}
+				}
 				finally{
 					throw new Error('data');				
 				}

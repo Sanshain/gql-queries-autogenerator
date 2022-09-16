@@ -23,7 +23,27 @@ function createQueries(targetFile, options) {
 		let acceptedTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime', 'JSONString'];
 
 		const queries = types.shift().fields;
-		const mutations = mutationTypes.fields.filter(m => m.description.startsWith(':::'));
+		const mutations = mutationTypes.fields.filter(m =>{
+			if (!m.description){			
+				
+				console.log("\x1b[31m");		
+				
+				console.warn(`${m.name} has no description with types. Use types description with following:`)
+
+				console.log("\x1b[34m");
+				console.log(`				
+					""":::
+					value: String
+					files: JSONString
+					"""				
+				`)
+
+				console.log("\x1b[0m");
+				
+				return ''
+			}
+			return  m.description.startsWith(':::')
+		});		
 
 		let jsDeclarations = '\n';
 
@@ -53,7 +73,7 @@ function createQueries(targetFile, options) {
 
 			let argsWrapper = `(${inputFields
 				.map(([field, type]) => field + ': $' + field)
-				.join(', ')})` + `{\n${declTypes.join(',') + '\n' + ' '.repeat(8)}}`
+				.join(', ')})` + `{\n${declTypes.join(',\n') + '\n' + ' '.repeat(8)}}`				
 
 			console.log(mutation);
 
