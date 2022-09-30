@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "baseUrl": "./",    
+	 "moduleResolution": "node",
+	 "strict": false,
+    "paths": {
+      "global/*": ["scripts/sources/*"]
+    }	 
+  },
+  "include": [	  
+    "./**/*",	 
+  ]
+}
+

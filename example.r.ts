@@ -1,6 +1,11 @@
 import gql from "./graphql-tag";
 
 
+
+type QueryString<T extends string> = `
+    ${'mutation'|'query'} ${T}${string}`
+
+
 export const postCreate = gql`
     mutation PostMutation {
         postCreate(files: $files, value: $value){
@@ -12,7 +17,8 @@ export const postCreate = gql`
             }
         }
     }
-`;
+` as QueryString<'PostMutation'>;
+
 
 export const likeApply = gql`
     mutation LikeMutation {
@@ -20,7 +26,8 @@ export const likeApply = gql`
             increased
         }
     }
-`;
+` as QueryString<'LikeMutation'>;
+
 
 export const friendshipApply = gql`
     mutation FriendshipMutation {
@@ -28,7 +35,8 @@ export const friendshipApply = gql`
             added
         }
     }
-`;
+` as QueryString<'FriendshipMutation'>;
+
 
 export const userSettingsMutation = gql`
     mutation SettingsMutationPayload {
@@ -48,7 +56,8 @@ export const userSettingsMutation = gql`
             clientMutationId
         }
     }
-`;
+` as QueryString<'SettingsMutationPayload'>;
+
 
 export const userType = gql`
     query UserType {
@@ -67,7 +76,8 @@ export const userType = gql`
             friendshipState
         }
     }
-`;
+` as QueryString<'UserType'>;
+
 
 export const postType = gql`
     query PostType {
@@ -83,7 +93,8 @@ export const postType = gql`
             rated
         }
     }
-`;
+` as QueryString<'PostType'>;
+
 
 export const dialogType = gql`
     query DialogType {
@@ -98,5 +109,6 @@ export const dialogType = gql`
             }
         }
     }
-`;
+` as QueryString<'DialogType'>;
+
 

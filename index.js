@@ -4,7 +4,11 @@ const fs = require('fs');
 
 const getTypes = require("./utils").getTypes;
 
-/** */
+/**
+ * 
+ * @param {string} targetFile - target file name
+ * @param {{include?:{complex?: object, base?: string[]}, exclude?: string[], template: string}} options 
+ */
 function createQueries(targetFile, options) {
 
 	let includeTypes = Array.isArray(options?.include)
@@ -79,7 +83,13 @@ function createQueries(targetFile, options) {
 
 			let mutationDecl = `mutation ${mutation.type.name} {\n${' '.repeat(8)}${mutation.name}${argsWrapper}\n${' '.repeat(4)}}`;
 
-			jsDeclarations += `export const ${mutation.name} = gql\`\n${' '.repeat(4) + mutationDecl}\n\`;\n\n`
+			let asType = ''
+			if (targetFile.endsWith('.ts')){
+				asType = ` as QueryString<'${mutation.type.name}'>`
+			}
+
+			jsDeclarations += `export const ${mutation.name} = gql\`\n${' '.repeat(4) + mutationDecl}\n\`` + 
+									`${asType};\n\n\n`
 		}
 
 
@@ -162,7 +172,9 @@ function createQueries(targetFile, options) {
 					declType.query = `${' '.repeat(3)} query ${type.name} {\n${rootFieldDecl}\n ${' '.repeat(3)}}`;
 				}
 
-				jsDeclarations += `export const ${declType.name} = gql\`\n${declType.query}\n\`;\n\n`
+				const asType = targetFile.endsWith('.ts') ? ` as QueryString<'${typeName}'>` : '';
+
+				jsDeclarations += `export const ${declType.name} = gql\`\n${declType.query}\n\`${asType};\n\n\n`
 			}
 		}
 
@@ -170,6 +182,12 @@ function createQueries(targetFile, options) {
 
 		if (options.template) {
 			let imports = fs.readFileSync(options.template).toString()
+
+			// if (targetFile.endsWith('.ts') && !~imports.indexOf('QueryString')){
+
+			if (targetFile.endsWith('.ts') && options.template.endsWith('.ts') && !~imports.indexOf('QueryString')){
+				imports += "\n\ntype QueryString<T extends string> = `\n    ${'mutation'|'query'} ${T}${string}`\n\n"
+			}
 			jsDeclarations = imports + jsDeclarations;
 		}
 
@@ -186,8 +204,9 @@ module.exports = { createQueries };
 
 
 if (process.argv.slice(1).shift() === __filename) {
-	createQueries('example.d.js', {
-		template: './template.js',
+	createQueries('example.r.ts', {
+		template: './template.ts',
+		// template: './template.js',
 		exclude: ['me'],
 		include: {
 			base: [],
