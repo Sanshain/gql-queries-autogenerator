@@ -7,6 +7,9 @@
   "scripts": {
     "test": "node ./index.js"
   },
+  "peerDependencies": {
+		"graphql-types-generator": "^1.3.0"
+  },
   "keywords": ["graphql", "generator", "utility", "dev tool"],
   "author": "Sanshain",
   "license": "ISC"

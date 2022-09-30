@@ -21,6 +21,12 @@ export const messageSubType = gql`
 `;
 ```
 
+## Installation: 
+
+```
+npm i -D gql-queries-generator
+```
+
 ## Using: 
 
 
@@ -39,12 +45,6 @@ const createQueries = require('gql-queries-generator').createQueries;
 createQueries('d.js', {template: './template.js'})
 ```
 
-## Installation: 
-
-```
-npm i -D gql-queries-generator
-```
-
 
 # Advanced usage: 
 
@@ -53,23 +53,24 @@ npm i -D gql-queries-generator
 - **template** - `string` - template for the generated file
 - **exclude** - `string[]` - list of types to ignore when generating
 - **include** - `{base: string[], complex: {[key: QueryName]: args: RootFieldName, fields: {[key: fieldName]: fields[]}}}` - by default, gql-queries-generator generates queries only for basic types. Such requests will contain one type and a description of all its fields. In this case, such a request will ignore nested types. The `include` option allows you to describe more complex queries that the graphql server returns. For example:
-```
-		include: {
-			base: [],
-			complex: {
-				posts: {
-					args: ['user'],
-					fields: {
-						by: ['id']
-					}
-				}
+
+```json
+include: {
+	base: [],
+	complex: {
+		posts: {
+			args: ["user"],
+			fields: {
+				by: ["id"]
 			}
 		}
+	}
+}
 ```
 
 will generate: 
 
-```
+```js
 export const postType = gql`
     query PostType {
         posts (user: $user) {
@@ -94,7 +95,7 @@ where `PostType` is operation name automatically picked up from the server
 
 **template** option allows you to specify any file extension, including `.ts`. In the latter case, the `QueryString` type will be automatically added to the description of queries and according string annotation. It is assumed that `QueryString` has the following description:
 
-```
+```ts
 type QueryString<T extends string> = `\n    ${'mutation'|'query'} ${T}${string}`
 ```
 
@@ -102,4 +103,6 @@ but its may be overriten inside template (look up `template` option). If templte
 
 
 Further the `QueryString<T>` may be use to integrate the tool with `graphql-types-generator` via extracting according type from `QueryTypes` (look up `graphql-types-generator` documentation) or with `@graphql-codegen/typescript-operations`, but in the last case its require some additional tuning.
+
+
 
