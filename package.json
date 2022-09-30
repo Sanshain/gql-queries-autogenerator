@@ -1,13 +1,13 @@
 {
   "name": "gql-queries-generator",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "description": "generator graphql queries based on graphql-server",
   "homepage": "https://github.com/Sanshain/gql-queries-autogenerator",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["graphql", "generator", "utility", "dev tool"],
+  "author": "Sanshain",
   "license": "ISC"
 }
