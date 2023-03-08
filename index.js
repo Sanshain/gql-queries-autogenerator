@@ -7,7 +7,15 @@ const getTypes = require("./utils").getTypes;
 /**
  * 
  * @param {string} targetFile - target file name
- * @param {{include?:{complex?: object, base?: string[]}, exclude?: string[], template: string}} options 
+ * @param {{
+ * 	include?:{
+ * 		complex?: object, 
+ * 		base?: string[]						
+ * 	}, 
+ * 	mutArgsFromDescMarks?: string,						// == ':::' 
+ * 	exclude?: string[], 									// names of entities (fields) to exclude
+ * 	template: string
+ * }} options 
  */
 function createQueries(targetFile, options) {
 
@@ -24,59 +32,93 @@ function createQueries(targetFile, options) {
 		// console.log(types);
 
 
-		let acceptedTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime', 'JSONString'];
+		let baseTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime', 'JSONString'];
 
 		const queries = types.shift().fields;
-		const mutations = mutationTypes.fields.filter(m =>{
-			if (!m.description){			
-				
-				console.log("\x1b[31m");		
-				
-				console.warn(`${m.name} has no description with types. Use types description with following:`)
-
-				console.log("\x1b[34m");
-				console.log(`				
-					""":::
-					value: String
-					files: JSONString
-					"""				
-				`)
-
-				console.log("\x1b[0m");
-				
-				return ''
-			}
-			return  m.description.startsWith(':::')
-		});		
+		let mutations = mutationTypes.fields;
+		
+		/** @legacy condition */
+		if (options.mutArgsFromDescMarks) mutations = mutationTypes.fields.filter(mutationFilter(options));		
 
 		let jsDeclarations = '\n';
 
 		for (const mutation of mutations) {
 
-			let inputFields = mutation.description.substring(3).split('\n')
-				.filter(item => item.trim())
-				.map(item => item.trim().split(':'));
+			let inputFields = []
+
+			/** @legacy condition */
+			if (options.mutArgsFromDescMarks){
+				/** @legacy */
+				inputFields = mutation.description.substring(3).split('\n')
+					.filter(item => item.trim())
+					.map(item => item.trim().split(':'));
+			}
+			else{
+				inputFields = mutation.args.map((tp, i) => {
+
+					if (~baseTypes.indexOf(tp.type.ofType?.name)){
+						return [tp.name, tp.type.ofType.name]
+					}
+
+					let paramType = types.find(c => c.name == tp.type.ofType?.name);
+					if (paramType){
+						if (paramType.fields){
+							console.warn('Not implemented!!!! TODO!');
+							// debugger
+							return [tp.name, tp.type.ofType.name]
+						}
+						else if(mutation.description.trimLeft().startsWith(':::')) {
+							var argType = mutation.description.split(/:::\d?/g)
+								.filter(item => item.trim())[i]
+								.split('\n')
+								.filter(item => item.trim())
+								.map(item => item.trim().split(':'));						
+						}
+					}
+					else if(mutation.description.trimLeft().startsWith(':::')){
+						var argType = mutation.description.split(':::')
+							.filter(item => item.trim())[i]
+							.split('\n')
+							.filter(item => item.trim())
+							.map(item => item.trim().split(':'));	
+					}
+					return [tp.name, argType]
+				})
+			}
+
 
 			const fieldTypes = mutation.type.fields;
-			let declTypes = []
+			let declTypes = [];
 
 			for (let fieldType of fieldTypes) {
 
-				try{					
-					let subFieldsList = fieldType.type.fields?.filter(f => ~acceptedTypes.indexOf(f.type.ofType?.name))
+				try{
+					let subFieldsList = null;
+
+					if (fieldType.type.fields){
+						subFieldsList = fieldType.type.fields?.filter(f => ~baseTypes.indexOf(f.type.ofType?.name))
+					}
+					else if (fieldType.type.ofType && !~baseTypes.indexOf(fieldType.type.ofType.name)){
+						let localType = types.find(c => c.name==fieldType.type.ofType.name);
+						if (localType){
+							subFieldsList = localType.fields?.filter(f => ~baseTypes.indexOf(f.type.ofType?.name))
+						}
+					}
 					let subFields = ' '.repeat(16) + subFieldsList?.map(f => f.name).join(',\n' + ' '.repeat(16));
 					let typeDecl = ' '.repeat(12) + fieldType.name + (subFieldsList ? `{\n${subFields + '\n' + ' '.repeat(12)}}` : '');
 
-					declTypes.push(typeDecl);
+					declTypes.push(typeDecl);					
 				}
-				catch{
-					console.log(`error on ${fieldType.type}`);
+				catch (e){
+					console.warn(`error on ${fieldType.name}: ${e}`);
 				}
 				
 			}
 
 			let argsWrapper = `(${inputFields
-				.map(([field, type]) => field + ': $' + field)
+				.map(([field, type]) => field + (Array.isArray(type) 
+					? `: {${type.map(ar => ar[0] + ': $' + ar[0]).join(', ')}}`
+					: (': $' + field)))
 				.join(', ')})` + `{\n${declTypes.join(',\n') + '\n' + ' '.repeat(8)}}`				
 
 			console.log(mutation);
@@ -112,7 +154,7 @@ function createQueries(targetFile, options) {
 
 				let type = types.find(type => type.name == typeName);
 				let fields = type?.fields?.filter(field => {
-					if (~acceptedTypes.indexOf(field.type.name) || ~acceptedTypes.indexOf(field.type.ofType?.name ?? (null + ''))) {
+					if (~baseTypes.indexOf(field.type.name) || ~baseTypes.indexOf(field.type.ofType?.name ?? (null + ''))) {
 						return true;
 					}
 					else if (field.description?.toLowerCase().startsWith('nested') || ~complexFields.indexOf(field.name)) {
@@ -220,4 +262,38 @@ if (process.argv.slice(1).shift() === __filename) {
 			}
 		}
 	});
+}
+
+
+/**
+ * @depreacted
+ * @param {*} options 
+ * @returns 
+ */
+function mutationFilter(options) {
+
+	let mark = options.mutArgsFromDescMarks || ':::';
+
+	return m => {
+
+		if (!m.description) {
+
+			console.log("\x1b[31m");
+
+			console.warn(`${m.name} has no description with types. Use types description with following:`);
+
+			console.log("\x1b[34m");
+			console.log(`				
+					""":::
+					value: String
+					files: JSONString
+					"""				
+				`);
+
+			console.log("\x1b[0m");
+
+			return '';
+		}
+		return m.description.startsWith(':::');
+	};
 }

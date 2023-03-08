@@ -6,9 +6,63 @@ type QueryString<T extends string> = `
     ${'mutation'|'query'} ${T}${string}`
 
 
+export const register = gql`
+    mutation Register {
+        register(email: $email, username: $username, password1: $password1, password2: $password2){
+            success,
+            errors,
+            token
+        }
+    }
+` as QueryString<'Register'>;
+
+
+export const verifyAccount = gql`
+    mutation VerifyAccount {
+        verifyAccount(token: $token){
+            success,
+            errors
+        }
+    }
+` as QueryString<'VerifyAccount'>;
+
+
+export const tokenAuth = gql`
+    mutation ObtainJSONWebToken {
+        tokenAuth(password: $password, email: $email, username: $username){
+            token,
+            success,
+            errors,
+            user{
+                id,
+                username,
+                firstName,
+                lastName,
+                email,
+                isStaff,
+                isActive,
+                dateJoined,
+                placeId
+            },
+            unarchiving
+        }
+    }
+` as QueryString<'ObtainJSONWebToken'>;
+
+
+export const updateAccount = gql`
+    mutation UpdateAccount {
+        updateAccount(firstName: $firstName, lastName: $lastName){
+            success,
+            errors
+        }
+    }
+` as QueryString<'UpdateAccount'>;
+
+
 export const postCreate = gql`
     mutation PostMutation {
-        postCreate(files: $files, value: $value){
+        postCreate(files: {files: $files, value: $value}, value: $value){
             post{
                 id,
                 time,
@@ -40,7 +94,7 @@ export const friendshipApply = gql`
 
 export const userSettingsMutation = gql`
     mutation SettingsMutationPayload {
-        userSettingsMutation(birthday: $birthday, sex: $sex, placeId: $placeId, placeTypeId: $placeTypeId){
+        userSettingsMutation(input: {birthday: $birthday, sex: $sex, placeId: $placeId, placeTypeId: $placeTypeId}){
             profile{
                 id,
                 username,
@@ -49,7 +103,9 @@ export const userSettingsMutation = gql`
                 dateJoined,
                 placeId
             },
-            errors,
+            errors{
+                field
+            },
             settings{
                 firstName
             },
