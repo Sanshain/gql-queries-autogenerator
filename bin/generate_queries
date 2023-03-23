@@ -1,0 +1,548 @@
+#!/usr/bin/env node
+
+'use strict';
+
+var fs = require('fs');
+var http = require('http');
+var path = require('path');
+var require$$0 = require('child_process');
+
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
+var http__default = /*#__PURE__*/_interopDefaultLegacy(http);
+var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
+var require$$0__default = /*#__PURE__*/_interopDefaultLegacy(require$$0);
+
+//@ts-check
+
+
+
+
+const { exec, execSync } = require$$0__default["default"];
+
+
+
+const queriesInfoQuery = {
+   //    query : `{
+   //         __schema {
+   //         types {
+   //            name,
+   //            fields {
+   //               name
+   //            }
+   //         }
+   //         }
+   //      }
+   //   `,
+
+   query: `
+   {
+      __schema {
+         types {
+            name,
+            fields {
+               name,      
+               description,         
+               type {
+                  name,                  
+                  ofType {
+                     name                 
+                  }
+               }
+            }
+         },
+         mutationType{
+            name,
+            fields{
+               name,
+               description,
+					args{
+						name,
+						type{
+					   	ofType{
+								name
+							}
+						}
+					},
+               type{
+                  name,
+                  fields{
+                     name,
+                     type{
+                        fields{
+                           name,
+                           type{
+                              name,
+                              ofType{
+                                 name
+                              },
+                           }
+                        },
+								ofType{
+									name
+								}								
+                     },
+                  },					
+               },				
+            }
+         }         
+      }
+   }
+  `,
+
+   //   query: `
+   //   {
+   //       __schema {
+   //          types {
+   //             name,
+   //             fields {
+   //                name,
+   //                type {
+   //                   name,
+   //                   ofType {
+   //                      name                 
+   //                   },
+   //                   fields{
+   //                      name,
+   //                      type{
+   //                         name,
+   //                         fields{
+   //                            name,
+   //                            type{
+   //                               name
+   //                            }
+   //                         }
+   //                      }
+   //                   }          
+   //                }
+   //             }
+   //          }
+   //       }
+   //    }  
+   //   `,
+   variables: null
+};
+
+
+
+/**
+ * @param {(arg: object) => void} typesHandler
+ */
+function getTypes$1(typesHandler) {
+   const options = {
+      hostname: '127.0.0.1',
+      port: 8000,
+      path: '/graphql',
+      method: 'POST',
+      // maxHeaderSize: 65536,
+      headers: { 'Content-Type': 'application/json' }
+   };
+
+   const request = http__default["default"].request(options, (response) => {
+
+      let data = '';
+
+      console.log(`statusCode: ${response.statusCode}`);
+      response.on('data', (d) => {
+         // при больщом объеме json выдает не весь ответ
+         // return typesHandler(JSON.parse(d.toString()));
+         data += d.toString();
+      });      //   process.stdout.write(d)      
+
+      response.on('end', () => {
+         if (response.statusCode == 200) return typesHandler(JSON.parse(data));
+         else {
+            fs__default["default"].existsSync('.errors') || fs__default["default"].mkdirSync('.errors');
+            // let errorFileName = path.dirname(__dirname) +'\\.errors\\error.html';            
+            fs__default["default"].writeFileSync('.errors' + path__default["default"].sep + 'error.html', data, {
+               flag: 'w'
+            });
+            try {
+               execSync('start .errors\\error.html');
+            }
+            catch {
+               try {
+                  execSync('start ' + 'http://' + options.hostname + ':' + options.port + options.path);
+               }
+               catch { }
+            }
+            finally {
+               throw new Error('data');
+            }
+         }
+      });
+   });
+
+   request.on('error', e => console.log(e));
+   request.write(JSON.stringify(queriesInfoQuery));
+   request.end();
+}
+
+var utils = { getTypes: getTypes$1 };
+
+//@ts-check
+
+
+
+const getTypes = utils.getTypes;
+
+/**
+ * 
+ * @param {string} targetFile - target file name
+ * @param {{
+ * 	include?:{
+ * 		complex?: object, 
+ * 		base?: string[]						
+ * 	}, 
+ * 	mutArgsFromDescMarks?: string,						// == ':::' 
+ * 	exclude?: string[], 									// names of entities (fields) to exclude
+ * 	template: string
+ * }} options 
+ */
+function createQueries(targetFile, options) {
+
+	let includeTypes = Array.isArray(options?.include)
+		? options.include
+		: (options?.include?.base || []).concat(Object.keys(options?.include?.complex || {}));
+
+	// getTypes((/** @type {any} */ data) => console.log(data))
+	getTypes((/** @type {any} */ response) => {
+		console.log(response);
+
+		// let types = response.data['__schema'].types;		
+		let { types, mutationType: mutationTypes } = response.data['__schema'];
+		// console.log(types);
+
+
+		let baseTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime', 'JSONString'];
+
+		const queries = types.shift().fields;
+		let mutations = mutationTypes.fields;
+		
+		/** @legacy condition */
+		if (options.mutArgsFromDescMarks) mutations = mutationTypes.fields.filter(mutationFilter(options));		
+
+		let jsDeclarations = '\n';
+
+		for (const mutation of mutations) {
+
+			let inputFields = [];
+
+			/** @legacy condition */
+			if (options.mutArgsFromDescMarks){
+				/** @legacy */
+				inputFields = mutation.description.substring(3).split('\n')
+					.filter(item => item.trim())
+					.map(item => item.trim().split(':'));
+			}
+			else {
+				inputFields = mutation.args.map((tp, i) => {
+
+					if (~baseTypes.indexOf(tp.type.ofType?.name)){
+						return [tp.name, tp.type.ofType.name]
+					}
+
+					let paramType = types.find(c => c.name == tp.type.ofType?.name);
+					if (paramType){
+						if (paramType.fields){
+							console.warn('Not implemented!!!! TODO!');
+							// debugger
+							return [tp.name, tp.type.ofType.name]
+						}
+						else if(mutation.description.trimLeft().startsWith(':::')) {
+							var argType = mutation.description.split(/:::\d?/g)
+								.filter(item => item.trim())[i]
+								.split('\n')
+								.filter(item => item.trim())
+								.map(item => item.trim().split(':'));						
+						}
+					}
+					else if(mutation.description.trimLeft().startsWith(':::')){
+						var argType = mutation.description.split(':::')
+							.filter(item => item.trim())[i]
+							.split('\n')
+							.filter(item => item.trim())
+							.map(item => item.trim().split(':'));	
+					}
+					return [tp.name, argType]
+				});
+			}
+
+
+			const fieldTypes = mutation.type.fields;
+			let declTypes = [];
+
+			for (let fieldType of fieldTypes) {
+
+				try{
+					let subFieldsList = null;
+
+					if (fieldType.type.fields){
+						subFieldsList = fieldType.type.fields?.filter(f => ~baseTypes.indexOf(f.type.ofType?.name));
+					}
+					else if (fieldType.type.ofType && !~baseTypes.indexOf(fieldType.type.ofType.name)){
+						let localType = types.find(c => c.name==fieldType.type.ofType.name);
+						if (localType){
+							subFieldsList = localType.fields?.filter(f => ~baseTypes.indexOf(f.type.ofType?.name));
+						}
+					}
+					let subFields = ' '.repeat(16) + subFieldsList?.map(f => f.name).join(',\n' + ' '.repeat(16));
+					let typeDecl = ' '.repeat(12) + fieldType.name + (subFieldsList ? `{\n${subFields + '\n' + ' '.repeat(12)}}` : '');
+
+					declTypes.push(typeDecl);					
+				}
+				catch (e){
+					console.warn(`error on ${fieldType.name}: ${e}`);
+				}
+				
+			}
+
+			let argsWrapper = `(${inputFields
+				.map(([field, type]) => field + (Array.isArray(type) 
+					? `: {${type.map(ar => ar[0] + ': $' + ar[0]).join(', ')}}`
+					: (': $' + field)))
+				.join(', ')})` + `{\n${declTypes.join(',\n') + '\n' + ' '.repeat(8)}}`;				
+
+			console.log(mutation);
+
+			let mutationDecl = `mutation ${mutation.type.name} {\n${' '.repeat(8)}${mutation.name}${argsWrapper}\n${' '.repeat(4)}}`;
+
+			let asType = '';
+			if (targetFile.endsWith('.ts')){
+				asType = ` as QueryString<'${mutation.type.name}'>`;
+			}
+
+			jsDeclarations += `export const ${mutation.name} = gql\`\n${' '.repeat(4) + mutationDecl}\n\`` + 
+									`${asType};\n\n\n`;
+		}
+
+
+		for (const query of queries) {
+
+			let queryName = query.name;
+			let typeName = query.type.name; // ?? queries.fields[0].type.ofType.name;
+			let inInclude = includeTypes ? ~includeTypes.indexOf(queryName) : false;
+			
+			let complexFields = [];
+			if (inInclude){
+				complexFields = Object.keys(options?.include?.complex?.[queryName]?.fields ?? []);
+			}			
+
+			if ((typeName && !(options?.exclude || []).includes(queryName)) || inInclude) {
+
+				if (inInclude) typeName = query.type.ofType.name;
+
+				let declType = { name: typeName.slice(0, 1).toLowerCase() + typeName.slice(1) };
+
+				let type = types.find(type => type.name == typeName);
+				let fields = type?.fields?.filter(field => {
+					if (~baseTypes.indexOf(field.type.name) || ~baseTypes.indexOf(field.type.ofType?.name ?? (null + ''))) {
+						return true;
+					}
+					else if (field.description?.toLowerCase().startsWith('nested') || ~complexFields.indexOf(field.name)) {
+						return true;
+					}
+					else return false;
+				}) || [];
+
+				fields = fields.map(field => {
+					if (field.description?.toLowerCase().startsWith('nested') || ~complexFields.indexOf(field.name)) {
+
+						let _typeName = field.type.name;
+						let _subTypeFields = [];
+						if (!_typeName){
+							_typeName = field.type.ofType.name;
+							_subTypeFields = options?.include?.complex?.[queryName]?.fields[field.name];
+							if (!_subTypeFields.length){
+								console.log(`Attention: fields for "${field.name}" field is not specified in "${queryName}" query`);
+							}
+						}						
+
+						let subType = types.find(type => _typeName == type.name);
+
+						let subFields = subType.fields
+							.map(f => f.name);
+						if (_subTypeFields?.length) subFields = subFields
+							.filter(f => ~_subTypeFields.indexOf(f));
+						subFields = subFields
+							.reduce((acc, f) => acc + ' '.repeat(16) + f + ',\n', '');
+
+						field.name = `${field.name} {\n${subFields}${' '.repeat(12)}}`;
+						return field;
+						
+					}
+					else return field;
+				});
+
+				if (!fields.length) declType.query = '';
+				else 
+				{
+
+					let args = `(id: $id)`;
+					if (inInclude && options?.include?.complex) 
+					{						
+						let inputFields = options?.include?.complex?.[queryName]?.args;
+
+						if (inputFields.length){
+
+							args = `(${inputFields.map(i => `${i}: $${i}`).join(', ')})`;
+						}
+
+						// if (inputFields.fields?.length){}						
+					}
+
+					let fieldsDecl = fields.map(field => ' '.repeat(12) + field.name).join(',\n');
+					let rootFieldDecl = ' '.repeat(8) + `${queryName} ${args} {\n${fieldsDecl}\n${' '.repeat(8)}}`;
+					declType.query = `${' '.repeat(3)} query ${type.name} {\n${rootFieldDecl}\n ${' '.repeat(3)}}`;
+				}
+
+				const asType = targetFile.endsWith('.ts') ? ` as QueryString<'${typeName}'>` : '';
+
+				jsDeclarations += `export const ${declType.name} = gql\`\n${declType.query}\n\`${asType};\n\n\n`;
+			}
+		}
+
+		targetFile = targetFile || process.argv[2];
+
+		if (options.template) {
+			let imports = fs__default["default"].readFileSync(options.template).toString();
+
+			// if (targetFile.endsWith('.ts') && !~imports.indexOf('QueryString')){
+
+			if (targetFile.endsWith('.ts') && options.template.endsWith('.ts') && !~imports.indexOf('QueryString')){
+				imports += "\n\ntype QueryString<T extends string> = `\n    ${'mutation'|'query'} ${T}${string}`\n\n";
+			}
+			jsDeclarations = imports + jsDeclarations;
+		}
+
+		fs__default["default"].writeFileSync(targetFile, jsDeclarations);
+
+		console.log(`queries generated to "${targetFile}"`);
+
+	});
+
+}
+var gqlQueriesGenerator = { default: createQueries, createQueries };
+
+
+
+if (process.argv.slice(1).shift() === __filename) {
+	createQueries('example.r.ts', {
+		template: './template.ts',
+		// template: './template.js',
+		exclude: ['me'],
+		include: {
+			base: [],
+			complex: {
+				posts: {
+					args: ['user'],
+					fields: {
+						by: ['id']
+					}
+				}
+			}
+		}
+	});
+}
+
+
+/**
+ * @depreacted
+ * @param {*} options 
+ * @returns 
+ */
+function mutationFilter(options) {
+
+	options.mutArgsFromDescMarks || ':::';
+
+	return m => {
+
+		if (!m.description) {
+
+			console.log("\x1b[31m");
+
+			console.warn(`${m.name} has no description with types. Use types description with following:`);
+
+			console.log("\x1b[34m");
+			console.log(`				
+					""":::
+					value: String
+					files: JSONString
+					"""				
+				`);
+
+			console.log("\x1b[0m");
+
+			return '';
+		}
+		return m.description.startsWith(':::');
+	};
+}
+
+//@ts-check
+
+
+
+
+
+const Helpers = {
+	t: 'target file',
+	'-template': 'template file'
+};
+
+
+let target = resolveFile('-t', 1);
+
+gqlQueriesGenerator(target, {
+	template: process.argv.indexOf('--template') ? resolveFile('--template', true) : void 0
+});
+
+
+
+
+/**
+ * @param {`-${string}`} flag 
+ * @param {boolean|1} [requiredFlag=undefined] 
+ * @returns {string}
+ */
+ function resolveFile(flag, requiredFlag) {
+
+	let target = getArgv('-' + flag) || (typeof requiredFlag == 'number' && (Number.isInteger(requiredFlag))
+		? process.argv[requiredFlag + 1] 
+		: null);
+
+	if (!target) {
+		 const errMessage = `the path is not specified (use the -${flag} <filename> option for specify ${Helpers[flag.slice(1)]})`;
+		 console.warn('\x1B[31m' + errMessage + '\x1B[0m');
+		 process.exit(1);
+	}
+
+	if (!path__default["default"].isAbsolute(target)) {
+		 target = path__default["default"].resolve(process.cwd(), target);
+	}
+
+	if (requiredFlag && requiredFlag !== undefined && !fs__default["default"].existsSync(target)) {
+		 console.log(process.cwd);
+		 console.warn('\x1B[31m' + `${target} file not found` + '\x1B[0m');
+		 // throw new Error(`${target} file not found`);
+		 process.exit(1);
+	}
+
+	return target;
+}
+
+
+/**
+ * @param {string} argk
+ */
+function getArgv(argk) {
+	let index = process.argv.indexOf(argk) + 1;
+	if (index) {
+		 return process.argv[index]
+	}
+	else {
+		 return null;
+	}
+}
+//# sourceMappingURL=generate_queries.map

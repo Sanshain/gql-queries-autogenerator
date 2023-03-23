@@ -241,7 +241,7 @@ function createQueries(targetFile, options) {
 
 };
 
-module.exports = { createQueries };
+module.exports = { default: createQueries, createQueries };
 
 
 
