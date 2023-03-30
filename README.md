@@ -1,7 +1,40 @@
 # gql-queries-autogenerator
 
-Autogenerate simplest client queries from graphql types. For example: 
+Autogenerate simplest client queries from graphql types.
 
+## Installation: 
+
+```
+npm i -D gql-queries-generator
+```
+
+## Using: 
+
+
+### via cli:
+
+For now, the approach requires to make a clone of the repo and then start `index.js`:
+
+```shell script
+gq-gen ./target.js
+```
+
+or without installation 
+
+```shell
+npx gql-queries-autogenerator ./target.js
+```
+
+#### Possible advanced options: 
+
+- `--template` - specify template for target file
+
+
+<hr>
+
+## Example usage
+
+For example from
 
 ```
 type MessageSubType{
@@ -21,14 +54,6 @@ export const messageSubType = gql`
 `;
 ```
 
-## Installation: 
-
-```
-npm i -D gql-queries-generator
-```
-
-## Using: 
-
 
 ### programming (recomended):
 
@@ -37,15 +62,6 @@ const createQueries = require('gql-queries-generator').createQueries;
 // or `import {createQueries} from 'gql-queries-generator';`
 createQueries('d.js', {template: './template.js'})
 ```
-
-### cli
-
-For now, the approach requires to make a clone of the repo and then start `index.js`:
-
-```
-node index.js targetFile.js
-```
-
 
 # Advanced usage: 
 
