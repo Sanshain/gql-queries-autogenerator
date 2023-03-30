@@ -1,7 +1,7 @@
 //@ts-check
 
 // const { createQueries } = require("./index");
-import createQueries from "./index";
+import createQueries from "./source/index";
 import path from "path";
 import fs from "fs";
 
