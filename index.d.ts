@@ -1,7 +1,8 @@
 
-type Options = {
+export type GenerateOptions = {
 	template?: string,
 	exclude?: string[],
+	mutArgsFromDescMarks?: string,
 	include?: {
 		base?: string[],
 		complex? : {
@@ -15,7 +16,12 @@ type Options = {
 	}
 }
 
-declare function createQueries(targetFile: string, options? : Options)
+declare function createQueries(targetFile: string, options? : GenerateOptions)
 
-export = createQueries;
+// export = createQueries;
+export default createQueries;
+export {
+	createQueries
+}
+
 

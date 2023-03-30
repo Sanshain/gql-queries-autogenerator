@@ -5,19 +5,21 @@ const fs = require('fs');
 const getTypes = require("./utils").getTypes;
 
 /**
- * 
  * @param {string} targetFile - target file name
- * @param {{
- * 	include?:{
- * 		complex?: object, 
- * 		base?: string[]						
- * 	}, 
- * 	mutArgsFromDescMarks?: string,						// == ':::' 
- * 	exclude?: string[], 									// names of entities (fields) to exclude
- * 	template: string
- * }} options 
+ * @pparam {{
+include?:{
+complex?: object, 
+base?: string[]						
+}, 
+mutArgsFromDescMarks?: string,						// == ':::' 
+exclude?: string[], 									// names of entities (fields) to exclude
+template: string
+}} options
+ * @param {import('.').GenerateOptions} options
  */
 function createQueries(targetFile, options) {
+
+	options = options || {}
 
 	let includeTypes = Array.isArray(options?.include)
 		? options.include
@@ -25,7 +27,7 @@ function createQueries(targetFile, options) {
 
 	// getTypes((/** @type {any} */ data) => console.log(data))
 	getTypes((/** @type {any} */ response) => {
-		console.log(response)
+		// console.log(response)
 
 		// let types = response.data['__schema'].types;		
 		let { types, mutationType: mutationTypes } = response.data['__schema'];
@@ -121,7 +123,7 @@ function createQueries(targetFile, options) {
 					: (': $' + field)))
 				.join(', ')})` + `{\n${declTypes.join(',\n') + '\n' + ' '.repeat(8)}}`				
 
-			console.log(mutation);
+			// console.log(mutation);
 
 			let mutationDecl = `mutation ${mutation.type.name} {\n${' '.repeat(8)}${mutation.name}${argsWrapper}\n${' '.repeat(4)}}`;
 
@@ -167,25 +169,28 @@ function createQueries(targetFile, options) {
 					if (field.description?.toLowerCase().startsWith('nested') || ~complexFields.indexOf(field.name)) {
 
 						let _typeName = field.type.name;
+						/** @type {string[] | undefined}} */
 						let _subTypeFields = []
 						if (!_typeName){
 							_typeName = field.type.ofType.name;
-							_subTypeFields = options?.include?.complex?.[queryName]?.fields[field.name]
-							if (!_subTypeFields.length){
+							_subTypeFields = options.include?.complex?.[queryName]?.fields[field.name]
+							if (!_subTypeFields?.length){
 								console.log(`Attention: fields for "${field.name}" field is not specified in "${queryName}" query`);
 							}
 						}						
 
-						let subType = types.find(type => _typeName == type.name);
+						const subType = types.find(type => _typeName == type.name);
+						let subFields = subType.fields.map(f => f.name)
 
-						let subFields = subType.fields
-							.map(f => f.name)
-						if (_subTypeFields?.length) subFields = subFields
-							.filter(f => ~_subTypeFields.indexOf(f))
-						subFields = subFields
-							.reduce((acc, f) => acc + ' '.repeat(16) + f + ',\n', '')
-
+						if (_subTypeFields?.length) {
+							//@ts-expect-error
+							subFields = subFields.filter(f => ~_subTypeFields.indexOf(f))
+						}
+						
+						subFields = subFields.reduce((acc, f) => acc + ' '.repeat(16) + f + ',\n', '')
+						
 						field.name = `${field.name} {\n${subFields}${' '.repeat(12)}}`
+
 						return field;
 						
 					}
@@ -199,9 +204,9 @@ function createQueries(targetFile, options) {
 					let args = `(id: $id)`
 					if (inInclude && options?.include?.complex) 
 					{						
-						let inputFields = options?.include?.complex?.[queryName]?.args;
+						let inputFields = options.include?.complex?.[queryName]?.args;
 
-						if (inputFields.length){
+						if (inputFields?.length){
 
 							args = `(${inputFields.map(i => `${i}: $${i}`).join(', ')})`
 						}
@@ -246,7 +251,7 @@ module.exports = { default: createQueries, createQueries };
 
 
 if (process.argv.slice(1).shift() === __filename) {
-	createQueries('example.r.ts', {
+	createQueries('./tests/example.r.ts', {
 		template: './template.ts',
 		// template: './template.js',
 		exclude: ['me'],
