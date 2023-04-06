@@ -1,8 +1,9 @@
 
 export type GenerateOptions = {
+	port?: number,
+	host?: string,
 	template?: string,
 	exclude?: string[],
-	mutArgsFromDescMarks?: string,
 	include?: {
 		base?: string[],
 		complex? : {
@@ -13,7 +14,9 @@ export type GenerateOptions = {
 				}
 			}
 		}
-	}
+	},
+	/** @deprecated */
+	mutArgsFromDescMarks?: string,	
 }
 
 declare function createQueries(targetFile: string, options? : GenerateOptions)

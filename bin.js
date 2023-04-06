@@ -11,14 +11,18 @@ import fs from "fs";
 
 const Helpers = {
 	t: 'target file',
+	p: 'server port',
 	'-template': 'template file'
 }
 
 
 let target = resolveFile('-t', 1);
 
+let r = getArgv('-p', r => Number(r))
+
 createQueries(target, {
-	template: process.argv.indexOf('--template') ? resolveFile('--template', true) : void 0
+	template: process.argv.indexOf('--template') ? resolveFile('--template', true) : void 0,
+	port: getArgv('-p', r => Number(r), v => v > 0)
 })
 
 
@@ -58,13 +62,26 @@ createQueries(target, {
 
 /**
  * @param {string} argk
+ * @param {(arg: string) => T} [converter=null]
+ * @param {(v: T) => boolean} [validator=null]
+ * @template T
+ * @returns {converter extends undefined ? string : T}
  */
-function getArgv(argk) {
+function getArgv(argk, converter, validator) {
+	let r;
 	let index = process.argv.indexOf(argk) + 1
-	if (index) {
-		 return process.argv[index]
+	if (index) {		
+		if (converter) r = converter(process.argv[index])
+		else {			
+			r = process.argv[index]
+		}
 	}
-	else {
-		 return null;
+	//@ts-expect-error
+	if (validator && !validator(r)){
+		console.warn('\x1B[31m' + `wrong ${Helpers[argk.slice(1)]}` + '\x1B[0m');
+		//@ts-expect-error
+		return null;
 	}
+	//@ts-expect-error
+	return r;	
 }

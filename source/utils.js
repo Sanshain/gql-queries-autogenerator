@@ -112,11 +112,12 @@ const queriesInfoQuery = {
 
 /**
  * @param {(arg: object) => void} typesHandler
+ * @param {{port?: number, host?: string}} serverOptions
  */
-function getTypes(typesHandler) {
+function getTypes(typesHandler, serverOptions) {
    const options = {
-      hostname: '127.0.0.1',
-      port: 8000,
+      hostname: serverOptions.host || '127.0.0.1',
+      port: serverOptions.port || 8000,
       path: '/graphql',
       method: 'POST',
       // maxHeaderSize: 65536,

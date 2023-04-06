@@ -242,6 +242,10 @@ function createQueries(targetFile, options) {
 
 		console.log(`queries generated to "${targetFile}"`)
 
+	},
+	{
+		port: options.port,
+		host: options.host,
 	})
 
 };
