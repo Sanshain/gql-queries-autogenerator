@@ -69,7 +69,7 @@ function createQueries(targetFile, options) {
 							// debugger
 							return [tp.name, tp.type.ofType.name]
 						}
-						else if(mutation.description.trimLeft().startsWith(':::')) {
+						else if(mutation.description?.trimLeft().startsWith(':::')) {
 							var argType = mutation.description.split(/:::\d?/g)
 								.filter(item => item.trim())[i]
 								.split('\n')
@@ -77,7 +77,7 @@ function createQueries(targetFile, options) {
 								.map(item => item.trim().split(':'));						
 						}
 					}
-					else if(mutation.description.trimLeft().startsWith(':::')){
+					else if(mutation.description?.trimLeft().startsWith(':::')){
 						var argType = mutation.description.split(':::')
 							.filter(item => item.trim())[i]
 							.split('\n')
