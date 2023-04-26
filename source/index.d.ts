@@ -3,7 +3,7 @@ export type GenerateOptions = {
 	port?: number,
 	host?: string,
 	template?: string,
-	exclude?: string[],
+	exclude?: string[],								// names of entities (fields) to exclude
 	include?: {
 		base?: string[],
 		complex? : {
@@ -16,7 +16,7 @@ export type GenerateOptions = {
 		}
 	},
 	/** @deprecated */
-	mutArgsFromDescMarks?: string,	
+	mutArgsFromDescMarks?: string,				// == ':::' 
 }
 
 declare function createQueries(targetFile: string, options? : GenerateOptions)

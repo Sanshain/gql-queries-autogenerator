@@ -1,3 +1,4 @@
+//@ts-ignore
 import gql from "./graphql-tag";
 
 
@@ -62,7 +63,7 @@ export const updateAccount = gql`
 
 export const postCreate = gql`
     mutation PostMutation {
-        postCreate(files: {files: $files, value: $value}, value: $value){
+        postCreate(files: {value: $value, files: $files}, value: $value){
             post{
                 id,
                 time,
@@ -94,7 +95,7 @@ export const friendshipApply = gql`
 
 export const userSettingsMutation = gql`
     mutation SettingsMutationPayload {
-        userSettingsMutation(input: {birthday: $birthday, sex: $sex, placeId: $placeId, placeTypeId: $placeTypeId}){
+        userSettingsMutation(input: {id: $id, firstName: $firstName, lastName: $lastName, birthday: $birthday, sex: $sex, placeId: $placeId, placeTypeId: $placeTypeId}){
             profile{
                 id,
                 username,
@@ -107,12 +108,30 @@ export const userSettingsMutation = gql`
                 field
             },
             settings{
-                firstName
+                username,
+                firstName,
+                lastName,
+                placeId
             },
             clientMutationId
         }
     }
 ` as QueryString<'SettingsMutationPayload'>;
+
+
+export const userSettingsType = gql`
+    query UserSettingsType {
+        userSettings (id: $id) {
+            username,
+            firstName,
+            lastName,
+            sex,
+            birthday,
+            placeId,
+            placeTypeId
+        }
+    }
+` as QueryString<'UserSettingsType'>;
 
 
 export const userType = gql`
@@ -126,6 +145,7 @@ export const userType = gql`
             dateJoined,
             avatar,
             sex,
+            birthday,
             placeId,
             name,
             image,

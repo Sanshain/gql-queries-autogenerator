@@ -2,19 +2,12 @@
 
 const fs = require('fs');
 
-const getTypes = require("./utils").getTypes;
+const { getTypes: loadTypes } = require("./utils");
+
 
 /**
- * @param {string} targetFile - target file name
- * @pparam {{
-include?:{
-complex?: object, 
-base?: string[]						
-}, 
-mutArgsFromDescMarks?: string,						// == ':::' 
-exclude?: string[], 									// names of entities (fields) to exclude
-template: string
-}} options
+ * Generate queries to target file (main entrypoint function)
+ * @param {string} targetFile - target file name 
  * @param {import('.').GenerateOptions} options
  */
 function createQueries(targetFile, options) {
@@ -24,9 +17,8 @@ function createQueries(targetFile, options) {
 	let includeTypes = Array.isArray(options?.include)
 		? options.include
 		: (options?.include?.base || []).concat(Object.keys(options?.include?.complex || {}))
-
-	// getTypes((/** @type {any} */ data) => console.log(data))
-	getTypes((/** @type {any} */ response) => {
+	
+	loadTypes((/** @type {{data: any, errors?: any}} */ response) => {
 		// console.log(response)
 
 		// let types = response.data['__schema'].types;		
@@ -34,7 +26,7 @@ function createQueries(targetFile, options) {
 		// console.log(types);
 
 
-		let baseTypes = ['ID', 'String', 'Int', 'Boolean', 'DateTime', 'JSONString'];
+		let baseTypes = ['ID', 'String', 'Boolean', 'Int', 'Date', 'DateTime', 'JSONString'];
 
 		const queries = types.shift().fields;
 		let mutations = mutationTypes.fields;
@@ -166,12 +158,13 @@ function createQueries(targetFile, options) {
 				}) || [];
 
 				fields = fields.map(field => {
+
 					if (field.description?.toLowerCase().startsWith('nested') || ~complexFields.indexOf(field.name)) {
 
 						let _typeName = field.type.name;
 						/** @type {string[] | undefined}} */
 						let _subTypeFields = []
-						if (!_typeName){
+						if (!_typeName) {
 							_typeName = field.type.ofType.name;
 							_subTypeFields = options.include?.complex?.[queryName]?.fields[field.name]
 							if (!_subTypeFields?.length){
@@ -254,24 +247,7 @@ module.exports = { default: createQueries, createQueries };
 
 
 
-if (process.argv.slice(1).shift() === __filename) {
-	createQueries('./tests/example.r.ts', {
-		template: './template.ts',
-		// template: './template.js',
-		exclude: ['me'],
-		include: {
-			base: [],
-			complex: {
-				posts: {
-					args: ['user'],
-					fields: {
-						by: ['id']
-					}
-				}
-			}
-		}
-	});
-}
+
 
 
 /**
