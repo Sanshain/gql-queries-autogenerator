@@ -48,6 +48,7 @@ function createQueries(targetFile, options) {
 					.map(item => item.trim().split(':'));
 			}
 			else{
+				let documentedTypes;
 				inputFields = mutation.args.map((tp, i) => {
 
 					if (~baseTypes.indexOf(tp.type.ofType?.name)){
@@ -69,12 +70,18 @@ function createQueries(targetFile, options) {
 								.map(item => item.trim().split(':'));						
 						}
 					}
-					else if(mutation.description?.trimLeft().startsWith(':::')){
-						var argType = mutation.description.split(':::')
+					else if(documentedTypes){
+						argType = documentedTypes[tp.name] // || 'String'
+					}
+					else if(!mutation.description?.trimLeft().startsWith(':::')){
+						documentedTypes = Object.fromEntries(
+							mutation.description.split(':::')
 							.filter(item => item.trim())[i]
-							.split('\n')
+							?.split('\n')
 							.filter(item => item.trim())
-							.map(item => item.trim().split(':'));	
+							.map(item => item.trim().split(':')) || []
+						);	
+						argType = documentedTypes[tp.name] // || 'String'
 					}
 					return [tp.name, argType]
 				})

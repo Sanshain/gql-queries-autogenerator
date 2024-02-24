@@ -42,8 +42,7 @@ export const tokenAuth = gql`
                 email,
                 isStaff,
                 isActive,
-                dateJoined,
-                placeId
+                dateJoined
             },
             unarchiving
         }
@@ -63,12 +62,11 @@ export const updateAccount = gql`
 
 export const postCreate = gql`
     mutation PostMutation {
-        postCreate(files: {value: $value, files: $files}, value: $value){
+        postCreate(files: $files, value: $value){
             post{
                 id,
                 time,
-                value,
-                files
+                value
             }
         }
     }
@@ -95,14 +93,13 @@ export const friendshipApply = gql`
 
 export const userSettingsMutation = gql`
     mutation SettingsMutationPayload {
-        userSettingsMutation(input: {id: $id, firstName: $firstName, lastName: $lastName, birthday: $birthday, sex: $sex, placeId: $placeId, placeTypeId: $placeTypeId}){
+        userSettingsMutation(input: {id: $id, firstName: $firstName, lastName: $lastName, birthday: $birthday, sex: $sex, placeId: $placeId, placeType: $placeType}){
             profile{
                 id,
                 username,
                 firstName,
                 lastName,
-                dateJoined,
-                placeId
+                dateJoined
             },
             errors{
                 field
@@ -110,8 +107,7 @@ export const userSettingsMutation = gql`
             settings{
                 username,
                 firstName,
-                lastName,
-                placeId
+                lastName
             },
             clientMutationId
         }
@@ -125,13 +121,31 @@ export const userSettingsType = gql`
             username,
             firstName,
             lastName,
-            sex,
             birthday,
             placeId,
-            placeTypeId
+            sex,
+            country,
+            city
         }
     }
 ` as QueryString<'UserSettingsType'>;
+
+
+export const dialogType = gql`
+    query DialogType {
+        dialog (id: $id) {
+            id,
+            avatar,
+            title,
+            talkersAmount,
+            unreadMessages,
+            lastMessage {
+                author,
+                value,
+            }
+        }
+    }
+` as QueryString<'DialogType'>;
 
 
 export const userType = gql`
@@ -166,25 +180,10 @@ export const postType = gql`
             value,
             files,
             likesCount,
-            rated
+            rated,
+            commentsCount
         }
     }
 ` as QueryString<'PostType'>;
-
-
-export const dialogType = gql`
-    query DialogType {
-        dialog (id: $id) {
-            id,
-            avatar,
-            title,
-            talkersAmount,
-            lastMessage {
-                author,
-                value,
-            }
-        }
-    }
-` as QueryString<'DialogType'>;
 
 
