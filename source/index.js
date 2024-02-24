@@ -97,7 +97,12 @@ function createQueries(targetFile, options) {
 					let subFieldsList = null;
 
 					if (fieldType.type.fields){
-						subFieldsList = fieldType.type.fields?.filter(f => ~baseTypes.indexOf(f.type.ofType?.name))
+						// return only base model with fields with JSON:
+						subFieldsList = fieldType.type.fields?.filter(
+							f => ~baseTypes.indexOf(f.type.ofType?.name) || f.type.name == baseTypes[6]
+						)
+						// return all base fields including annotated?:
+						// subFieldsList = fieldType.type.fields?.filter(f => ~baseTypes.indexOf(f.type.name || f.type.ofType?.name))
 					}
 					else if (fieldType.type.ofType && !~baseTypes.indexOf(fieldType.type.ofType.name)){
 						let localType = types.find(c => c.name==fieldType.type.ofType.name);
